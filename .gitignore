@@ -1,0 +1,4 @@
+backups/
+source_data/
+.DS_Store
+*.tmp
