@@ -20,24 +20,26 @@ Update this file after every session.
 🟢 Training Log — search + filter working
 🟢 Athlete Profile — save and delete wired
 🟢 Targets — progress bars rendering
-🟡 Progress tabs — 7 tabs wired / data may be placeholder
-⬜ Programme Builder — create and edit full programme
+🟢 Progress tabs — 7 tabs wired, all real data (consistency%, streak, body-part coverage computed from logs)
+🟢 Programme Builder — name, save, load, delete multiple named programmes; library panel in UI
 🟢 Workout Generator — full generate → save flow (verified)
-⬜ Exercise Library — browse and filter 1,797 drills
-⬜ Imported Packs — display xlsx-sourced drill packs
-⬜ Export — export state as JSON / PDF
+🟢 Exercise Library — search, filter, category tabs, detail panel (2,490 drills, verified)
+🟢 Imported Packs — all 7 source files displaying with drill/workout row counts (verified)
+🟢 Export — Export Full JSON / Training Log / Drill Library buttons wired (verified)
 
 ## DESIGN
-🟡 Sidebar nav — structure correct / active state unreliable
-⬜ Mobile responsive layout
+🟢 Sidebar nav — active state fixed (querySelectorAll runs unconditionally on every render)
+🟢 Mobile responsive — block-grid, split, two-col, bodymap, dash-grid, session-hdr all collapse at 800px; section-tabs scroll horizontally
 ⬜ Dark/light theme toggle
 ⬜ Accent colour consistency audit (#e8462a throughout)
 
 ## DATA
-🟢 APP_DATA embedded — 1,797 drills, 2 athletes
+🟢 APP_DATA embedded — 2,490 drills (1,569 unique), 2 athletes
 🟢 data_export.json — standalone backup
-⬜ Import flow — load new drills from xlsx without rebuilding HTML
-⬜ Multi-athlete data isolation
+🟢 Excel import — 693 drills injected from excel master training.xlsx (AGENT 7 prompt created)
+🟢 Multi-athlete data isolation — log filter defaults to active athlete; switching athlete resets filter
+⬜ Import flow — UI to load new drills from xlsx without rebuilding HTML
+⬜ Multi-athlete data isolation (write path) — distance field for Running tab
 
 ## SESSION LOG
 2026-06-22 — File reorganised to Coaching_OS_LIVE/, all stale versions trashed
@@ -49,3 +51,10 @@ Update this file after every session.
 2026-06-22 — null-safety audit: loadState deep-merges filters; renderGenerator, renderLog, recentRows guards added
 2026-06-22 — Dashboard redesigned: 3-col layout (session + stats + workout summary) + 7-day week grid, matches mockup (browser verified)
 2026-06-22 — Generator: preview/save split, Not extracted fallbacks fixed, full flow verified
+2026-06-22 — Excel import: 693 drills injected from APP EXPORT sheet (uniqueDrills 876→1,569, totalDrills 1,797→2,490), pushed to GitHub
+2026-06-23 — Browser audit: Exercise Library, Imported Packs, Export all verified working
+2026-06-23 — Sidebar active state fixed: querySelectorAll now unconditional
+2026-06-23 — Progress tabs: Overview + Body-Part Coverage now use real computed data (consistency%, streak, avgMins, per-area session counts)
+2026-06-23 — Programme Builder: programmeName, save/load/delete library, activePlanDays() routing
+2026-06-23 — Mobile responsive: 8 layout classes collapse at 800px; inline grids extracted to CSS classes
+2026-06-23 — Multi-athlete isolation: log defaults to active athlete, resets on athlete switch

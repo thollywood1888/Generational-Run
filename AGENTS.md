@@ -133,6 +133,114 @@ Use only when JS is fully stable.
 
 ---
 
+## AGENT 7 — EXCEL DRILL IMPORT AGENT
+Use when you have a new .xlsx file of drills to inject into APP_DATA.
+
+  Working file: /Users/hollywood/Desktop/Coaching_OS_LIVE/coaching_os.html
+  Source Excel: /Users/hollywood/Desktop/Coaching_OS_LIVE/source_data/<filename>.xlsx
+
+  Pre-conditions (check before running):
+  - The HTML file passes the AGENT 1 audit (no structural issues)
+  - The xlsx has an "APP EXPORT" sheet with columns:
+    id, name, bodyArea, equipment, trainingType, level, setsTime, how, progression, regression
+
+  Steps:
+
+  1. Run this Python script to inject new drills (edit XLSX_PATH as needed):
+
+  ```python
+  import pandas as pd, json, re
+
+  HTML_PATH = '/Users/hollywood/Desktop/Coaching_OS_LIVE/coaching_os.html'
+  XLSX_PATH = '/Users/hollywood/Desktop/Coaching_OS_LIVE/source_data/<filename>.xlsx'
+
+  df = pd.read_excel(XLSX_PATH, sheet_name='APP EXPORT')
+  df.columns = [c.strip() for c in df.columns]
+  df = df.where(pd.notna(df), None)
+
+  with open(HTML_PATH, 'r', encoding='utf-8') as f:
+      content = f.read()
+
+  # Extract existing drill names for dedup
+  existing = set(re.findall(r'"name":\s*"([^"]+)"', content))
+  print(f'Existing names: {len(existing)}')
+
+  # Build new drill objects
+  new_drills = []
+  skipped = 0
+  for _, row in df.iterrows():
+      name = str(row.get('name') or '').strip()
+      if not name or name in existing:
+          skipped += 1
+          continue
+      sets_raw = str(row.get('setsTime') or '')
+      parts = [p.strip() for p in sets_raw.split('·')]
+      sets_val = parts[0] if parts else 'Not extracted'
+      reps_val = parts[1] if len(parts) > 1 else 'Not extracted'
+      drill = {
+          "id": str(row.get('id') or name[:8]).strip(),
+          "name": name,
+          "category": str(row.get('trainingType') or 'General').strip(),
+          "bodyPart": str(row.get('bodyArea') or 'Full Body').strip(),
+          "equipment": str(row.get('equipment') or 'None').strip(),
+          "level": str(row.get('level') or 'Intermediate').strip(),
+          "sets": sets_val,
+          "repsOrTime": reps_val,
+          "rest": "60 sec",
+          "coachingCue": str(row.get('how') or 'Not extracted').strip(),
+          "progression": str(row.get('progression') or 'Not extracted').strip(),
+          "regression": str(row.get('regression') or 'Not extracted').strip()
+      }
+      new_drills.append(drill)
+      existing.add(name)
+
+  print(f'New drills: {len(new_drills)} | Skipped: {skipped}')
+
+  # Locate end of uniqueDrills array
+  m = re.search(r'"uniqueDrills":\s*\[', content)
+  start = m.end()
+  depth = 1; i = start
+  while i < len(content) and depth > 0:
+      if content[i] == '[': depth += 1
+      elif content[i] == ']': depth -= 1
+      i += 1
+  end = i - 1  # points at closing ]
+
+  # Inject before closing ]
+  injection = ',\n' + ',\n'.join(json.dumps(d, ensure_ascii=False) for d in new_drills)
+  new_content = content[:end] + injection + content[end:]
+
+  # Update counts
+  old_count = int(re.search(r'"totalDrills":\s*(\d+)', new_content).group(1))
+  new_total = old_count + len(new_drills)
+  new_content = re.sub(r'"totalDrills":\s*\d+', f'"totalDrills": {new_total}', new_content)
+
+  old_unique = int(re.search(r'"uniqueDrills_count":\s*(\d+)', new_content).group(1)) if re.search(r'"uniqueDrills_count":\s*(\d+)', new_content) else 0
+  if old_unique:
+      new_content = re.sub(r'"uniqueDrills_count":\s*\d+', f'"uniqueDrills_count": {old_unique + len(new_drills)}', new_content)
+
+  with open(HTML_PATH, 'w', encoding='utf-8') as f:
+      f.write(new_content)
+  print(f'Done. totalDrills: {old_count} → {new_total}')
+  ```
+
+  2. After script completes, run sanity check:
+     - `grep -o '"totalDrills": [0-9]*' coaching_os.html` — confirm new count
+     - Python drill-count script (count { objects in uniqueDrills array)
+     - `grep -c "function go(" coaching_os.html` — must be 1
+     - `grep -c "function render()" coaching_os.html` — must be 1
+
+  3. Open in browser — verify Exercise Library renders drills from the new source.
+
+  4. Commit and push:
+     git add coaching_os.html
+     git commit -m "Import N new drills from <filename>.xlsx"
+     git push
+
+  5. Update TASKS.md — SESSION LOG entry with drill counts before/after.
+
+---
+
 ## AGENT 6 — CHECKPOINT AGENT
 Use at end of a productive session to save state.
 
