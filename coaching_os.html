@@ -2,8 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>Generational Run</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#f0524d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Gen Run">
+<link rel="apple-touch-icon" href="icon-192.png">
 <style>
 :root{
   --bg:#050b12; --bg2:#07121e; --panel:#0b1724cc; --panel2:#0e1d2ddb; --line:#1e3348;
@@ -194,6 +200,7 @@ function getAuthUser(){return sessionStorage.getItem('co_user');}
 function checkLogin(e){e.preventDefault();const uEl=document.getElementById('login-user');const pEl=document.getElementById('login-pass');const errEl=document.getElementById('login-err');if(!uEl||!pEl)return;const u=(uEl.value||'').toLowerCase().trim();const p=(pEl.value||'').trim();if(CREDS[u]&&CREDS[u]===p){sessionStorage.setItem('co_user',u);const s=document.getElementById('login-screen');if(s)s.style.display='none';render();}else{if(errEl)errEl.textContent='Incorrect username or password.';}}
 function logout(){sessionStorage.removeItem('co_user');location.reload();}
 if(getAuthUser()){const s=document.getElementById('login-screen');if(s)s.style.display='none';render();}
+if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(()=>{});}
 </script>
 </body>
 </html>
